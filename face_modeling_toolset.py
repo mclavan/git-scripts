@@ -1,4 +1,23 @@
-"""Face sculpting panel. Run show() from Maya's Python Script Editor."""
+"""Face sculpting panel for Maya.
+
+To open the panel, run this in Maya's Python Script Editor (not MEL).
+Change script_folder if this repository is in a different location:
+
+    import sys
+    import importlib
+
+    script_folder = r"D:\OneDrive - Full Sail University\CGA-3312\rigging_tools\git-scripts"
+    if script_folder not in sys.path:
+        sys.path.insert(0, script_folder)
+
+    import sculpt_falloff_switcher
+    import face_modeling_toolset
+    importlib.reload(sculpt_falloff_switcher)
+    importlib.reload(face_modeling_toolset)
+    face_modeling_toolset.show()
+
+Keep sculpt_falloff_switcher.py in the same folder as this file.
+"""
 
 from functools import partial
 import math
@@ -96,6 +115,9 @@ class FaceModelingPanel(QtWidgets.QDialog):
         layout.setSpacing(12)
         heading = QtWidgets.QLabel("FACE  /  SCULPT")
         layout.addWidget(heading)
+        self.status = QtWidgets.QLabel()
+        self.status.setWordWrap(True)
+        layout.addWidget(self.status)
         grid = QtWidgets.QGridLayout()
         self.tools = {}
         for index, name in enumerate(TOOLS):
@@ -135,9 +157,9 @@ class FaceModelingPanel(QtWidgets.QDialog):
             row.addWidget(button)
             self.symmetry[title] = button
         layout.addWidget(symmetry)
-        self.status = QtWidgets.QLabel()
-        self.status.setWordWrap(True)
-        layout.addWidget(self.status)
+        shape_editor_button = QtWidgets.QPushButton("Open Shape Editor")
+        shape_editor_button.clicked.connect(self.open_shape_editor)
+        layout.addWidget(shape_editor_button)
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(200)
         self.timer.timeout.connect(self.refresh)
@@ -191,6 +213,9 @@ class FaceModelingPanel(QtWidgets.QDialog):
         except RuntimeError as error:
             cmds.warning(str(error))
         self.refresh()
+
+    def open_shape_editor(self, *_):
+        mel.eval('tearOffPanel "Shape Editor" "shapePanel" false;')
 
     def refresh(self):
         try:
