@@ -5,30 +5,28 @@ sculpt_falloff_switcher.show()
 import maya.cmds as cmds
 
 
+def set_falloff(value):
+    """Set Surface (1) or Volume (2) on the active sculpt context.
+
+    Shared by the original window and the face modeling panel.
+    Raises RuntimeError when a sculpt tool is not active.
+    """
+    if value not in (1, 2):
+        raise ValueError("Falloff must be Surface (1) or Volume (2).")
+    context = cmds.currentCtx()
+    cmds.sculptMeshCacheCtx(context, query=True, falloffType=True)
+    cmds.sculptMeshCacheCtx(context, edit=True, falloffType=value)
+
+
 def show():
     window_name = "sculptFalloffSwitcherWindow"
 
     if cmds.window(window_name, exists=True):
         cmds.deleteUI(window_name)
 
-    def set_falloff(value):
-        # Get the currently active Maya tool context.
-        active_context = cmds.currentCtx()
-
+    def change_falloff(value):
         try:
-            # Verify that the active context is a sculpting context.
-            cmds.sculptMeshCacheCtx(
-                active_context,
-                query=True,
-                falloffType=True
-            )
-
-            # Change the falloff type.
-            cmds.sculptMeshCacheCtx(
-                active_context,
-                edit=True,
-                falloffType=value
-            )
+            set_falloff(value)
 
             cmds.text(
                 "falloffStatus",
@@ -65,13 +63,13 @@ def show():
     cmds.button(
         label="Surface",
         height=35,
-        command=lambda *_: set_falloff(1)
+        command=lambda *_: change_falloff(1)
     )
 
     cmds.button(
         label="Volume",
         height=35,
-        command=lambda *_: set_falloff(2)
+        command=lambda *_: change_falloff(2)
     )
 
     cmds.setParent("..")
